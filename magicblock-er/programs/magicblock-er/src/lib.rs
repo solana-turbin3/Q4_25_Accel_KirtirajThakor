@@ -14,7 +14,8 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("Fp8vsJttPbh2ri38dvNLxREQXNgDEoCz4TCFTeMeEGHi");
+declare_id!("F3H1NHuNn35n5R1Cus2uzCraBJfg772ogTdwoyNGJYfz");
+
 
 #[ephemeral]
 #[program]
@@ -26,8 +27,8 @@ pub mod magicblock_er {
         Ok(())
     }
 
-    pub fn update(ctx: Context<UpdateUser>, new_data: u64) -> Result<()> {
-        ctx.accounts.update(new_data)?;
+    pub fn update(ctx: Context<UpdateUser>, seed: [u8; 32]) -> Result<()> {
+        ctx.accounts.update(seed)?;
 
         Ok(())
     }
@@ -54,5 +55,9 @@ pub mod magicblock_er {
         ctx.accounts.close()?;
         
         Ok(())
+    }
+
+    pub fn request_randomness(ctx: Context<FetchRandomness>, seed: u8) -> Result<()> {
+        FetchRandomness::handler(ctx, seed)
     }
 }

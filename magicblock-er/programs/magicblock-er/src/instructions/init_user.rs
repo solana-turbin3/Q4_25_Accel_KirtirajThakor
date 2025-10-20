@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::state::UserAccount;
 
-#[derive(Acounts)]
+#[derive(Accounts)]
 pub struct InitUser<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
@@ -20,7 +20,7 @@ pub struct InitUser<'info> {
 }
 
 impl<'info> InitUser<'info> {
-    pub fn initialize(&mut self, bumps: &InitUsereBumps) -> Result<()> {
+    pub fn initialize(&mut self, bumps: &InitUserBumps) -> Result<()> {
         self.user_account.set_inner(UserAccount {
             user: *self.user.key,
             data: 0,
