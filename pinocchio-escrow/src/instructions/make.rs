@@ -66,5 +66,48 @@ pub fn process_make_instruction(
         *(data.as_ptr().add(9) as *const u64)
     };
 
-    
+    let bump = [bump.to_le()];
+    let seed = [Seed::from(b"escrow"), Seed::from(maker.key()), Seed::from(&bump)];
+    let seeds = Signer::from(&seed);
+
+    if escrow_account.owner() != &crate::ID {
+        CreateAccount { 
+            from: maker,
+            to: escrow_account,
+            lamports: Rent::get()?.minimum_balance(Escrow::LEN),
+            space: Escrow::LEN as u64,
+            owner: &crate::ID
+        }.invoke_signed(&[seeds.clone()])?;
+
+        {
+            let escrow_state = Escrow::from_account_info(escrow_account)?;
+
+            escrow_state.set_maker(maker.key());
+            escrow_state.set_mint_a(mint_a.key());
+            escrow_state.set_mint_b(mint_b.key());
+            escrow_state.set_amount_to_receive(amount_to_receive);
+            escrow_state.set_amount_to_give(amount_to_give);  
+            escrow_state.bump = data[0];
+        }
+    } else {
+        return Err(pinocchio::program_error::ProgramError::IllegalOwner);
+    }
+
+    pinocchio_associated_token_account::instructions::Create {
+        funding_account: maker,
+        account: escrow_ata,
+        wallet: escrow_account,
+        mint: mint_a,
+        token_program: token_program,
+        system_program: system_program
+    }.invoke()?;
+
+    pinocchio_token::instructions::Transfer {
+        from: maker_ata,
+        to: escrow_ata,
+        authority: maker,
+        amount: amount_to_give,
+    }.invoke()?;
+
+    Ok(())
 }
